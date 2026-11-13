@@ -11,11 +11,11 @@ A military-style data face for round Wear OS watches (built for the OnePlus Watc
 | Top | date · heart rate · week number · unread notifications |
 | Centre | time (follows the 12/24 h system setting) |
 | Middle | battery · steps · step goal % |
-| Bottom | temperature · chance of rain · UV index |
+| Bottom | temperature · chance of rain · distance walked (km, estimated from steps) |
 
 A stripped-down always-on (ambient) layout keeps only the time.
 
-Notes from the OnePlus Watch 3: heart rate shows `--` until the sensor has a reading (it reports 0 between measurements), and the UV value comes from the OnePlus weather app's complication, because the system weather source always returns 0 there. On watches without that app the UV field shows `--`.
+Notes from the OnePlus Watch 3: heart rate shows `--` until the sensor has a reading (it reports 0 between measurements). The system weather source always returns 0 for UV there, so that field was replaced by distance.
 
 ## How it is built
 

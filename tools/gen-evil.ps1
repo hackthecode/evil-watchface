@@ -83,14 +83,16 @@ Txt "vStp"  $xA[1] $yAV 136 $sA "saira_stencil" $GREY "%s" @("[STEP_COUNT]") "84
 Txt "lGol"  $xA[2] $yAL 110 $sLbl "mono_bold" $LBL "GOAL" $null "GOAL"
 Txt "vGol"  $xA[2] $yAV 130 $sA "saira_stencil" $RED "%s%%" @($GOAL) "84%"
 
-# row B: TEMP | RAIN | UV
+# row B: TEMP | RAIN | KM
 $xB = @(128, 233, 344)
 Txt "lTmp" $xB[0] $yBL 100 $sLbl "mono_bold" $LBL "TEMP" $null "TEMP"
 Txt "vTmp" $xB[0] $yBV 116 $sB "saira_stencil" $GREY "%s°C" @("([WEATHER.TEMPERATURE_UNIT] == 2) ? round(([WEATHER.TEMPERATURE] - 32) / 1.8) : [WEATHER.TEMPERATURE]") "19°C"
 Txt "lRn"  $xB[1] $yBL 100 $sLbl "mono_bold" $LBL "RAIN" $null "RAIN"
 Txt "vRn"  $xB[1] $yBV 116 $sB "saira_stencil" $GREY "%s%%" @("[WEATHER.CHANCE_OF_PRECIPITATION]") "20%"
-Txt "lUv"  $xB[2] $yBL 100 $sLbl "mono_bold" $LBL "UV" $null "UV"
-Txt "vUv"  $xB[2] $yBV 116 $sB "saira_stencil" $RED "%s" @("[WEATHER.UV_INDEX]") "2"
+# distance is estimated from the step count ($STRIDE metres per step); one decimal built from two integers
+$STRIDE = 0.762; $M = "([STEP_COUNT] * $STRIDE)"
+Txt "lKm"  $xB[2] $yBL 100 $sLbl "mono_bold" $LBL "KM" $null "KM"
+Txt "vKm"  ($xB[2] - 4) $yBV 116 $sB "saira_stencil" $RED "%s.%s" @("floor($M / 1000)", "floor($M / 100) % 10") "6.4"
 
 # brand placard
 Rect 171 ($yBrand - 8) 124 36 $RED
@@ -107,7 +109,7 @@ foreach ($vx in 174, 292) { Ln $vx ($yBL - 2) $vx ($yBV + 28) $DIM 1; Ln $vx ($y
 Ln 131 ($yBrand + 10) 161 ($yBrand + 10) $DIM 2; Ln 305 ($yBrand + 10) 335 ($yBrand + 10) $DIM 2
 
 # ---------------------------------------------------------------- fit check: worst-case ink box must stay inside the chrono ring
-$worst = @{ date = "WED 30 SEP"; vHr = "188"; vWk = "52"; vMsg = "99"; hh24 = "00"; mm = "00"; vBat = "100%"; vStp = "18888"; vGol = "100%"; vTmp = "-12°C"; vRn = "100%"; vUv = "11" }
+$worst = @{ date = "WED 30 SEP"; vHr = "188"; vWk = "52"; vMsg = "99"; hh24 = "00"; mm = "00"; vBat = "100%"; vStp = "18888"; vGol = "100%"; vTmp = "-12°C"; vRn = "100%"; vKm = "99.9" }
 $chkG = [System.Drawing.Graphics]::FromImage((New-Object System.Drawing.Bitmap 4, 4))
 foreach ($t in $texts) {
   $smp = if ($worst[$t.name]) { $worst[$t.name] } else { $t.sample }; if (-not $smp) { continue }
@@ -133,26 +135,7 @@ foreach ($sh in $shapes) {
   else { $shapeXml += "        <Rectangle x=`"$($sh.x)`" y=`"$($sh.y)`" width=`"$($sh.w)`" height=`"$($sh.h)`"><Fill color=`"$($sh.color)`"/></Rectangle>`n" }
 }
 $shapeXml += "      </PartDraw>`n"
-$active = $shapeXml; foreach ($t in $texts) { if ($t.name -ne "vUv") { $active += TextXml $t "      " } }
-# UV: the system weather source ([WEATHER.UV_INDEX]) is always 0 on the OnePlus Watch 3, so the value comes from the
-# OnePlus weather app's own UV complication. On watches without that app the slot shows "--".
-$uv = $texts | Where-Object { $_.name -eq "vUv" }
-$uvFont = "<Font family=`"$($uv.font)`" size=`"$($uv.size)`" color=`"$($uv.color)`">"
-$uvBox = "x=`"0`" y=`"0`" width=`"$($uv.w)`" height=`"$($uv.h)`""
-$slots = @"
-    <ComplicationSlot name="uv" slotId="0" x="$($uv.x)" y="$($uv.y)" width="$($uv.w)" height="$($uv.h)" supportedTypes="SHORT_TEXT EMPTY" isCustomizable="FALSE">
-        <Variant mode="AMBIENT" target="alpha" value="0"/>
-        <DefaultProviderPolicy defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY" primaryProvider="com.heytap.wearable.weather/com.heytap.wearable.weather.complication.wearos.UVIndexProviderService" primaryProviderType="SHORT_TEXT"/>
-        <BoundingBox $uvBox/>
-        <Complication type="SHORT_TEXT">
-          <PartText $uvBox><Text align="CENTER">$uvFont<Template>%s<Parameter expression="round([COMPLICATION.TEXT])"/></Template></Font></Text></PartText>
-        </Complication>
-        <Complication type="EMPTY">
-          <PartText $uvBox><Text align="CENTER">$uvFont--</Font></Text></PartText>
-        </Complication>
-      </ComplicationSlot>
-
-"@
+$active = $shapeXml; foreach ($t in $texts) { $active += TextXml $t "      " }
 # chrono seconds hand: outer needle only (r 150..231), pivot = screen centre
 $HW = 24; $HH = 233
 $active += @"
@@ -189,9 +172,6 @@ $xml = @"
     <Group name="active" x="0" y="0" width="466" height="466" alpha="255">
       <Variant mode="AMBIENT" target="alpha" value="0"/>
 $active    </Group>
-
-    <!-- ================= COMPLICATIONS (must sit directly under Scene) ================= -->
-$slots
 
     <!-- ================= ALWAYS-ON ================= -->
     <Group name="aod" x="0" y="0" width="466" height="466" alpha="0">

@@ -56,26 +56,13 @@
       <PartText name="vTmp" x="70" y="331" width="116" height="59"><Text align="CENTER"><Font family="saira_stencil" size="36" color="#ffd4d7da"><Template>%s°C<Parameter expression="([WEATHER.TEMPERATURE_UNIT] == 2) ? round(([WEATHER.TEMPERATURE] - 32) / 1.8) : [WEATHER.TEMPERATURE]"/></Template></Font></Text></PartText>
       <PartText name="lRn" x="183" y="327" width="100" height="20"><Text align="CENTER"><Font family="mono_bold" size="13" color="#ff7d8287">RAIN</Font></Text></PartText>
       <PartText name="vRn" x="175" y="331" width="116" height="59"><Text align="CENTER"><Font family="saira_stencil" size="36" color="#ffd4d7da"><Template>%s%%<Parameter expression="[WEATHER.CHANCE_OF_PRECIPITATION]"/></Template></Font></Text></PartText>
-      <PartText name="lUv" x="294" y="327" width="100" height="20"><Text align="CENTER"><Font family="mono_bold" size="13" color="#ff7d8287">UV</Font></Text></PartText>
+      <PartText name="lKm" x="294" y="327" width="100" height="20"><Text align="CENTER"><Font family="mono_bold" size="13" color="#ff7d8287">KM</Font></Text></PartText>
+      <PartText name="vKm" x="282" y="331" width="116" height="59"><Text align="CENTER"><Font family="saira_stencil" size="36" color="#ffff2424"><Template>%s.%s<Parameter expression="floor(([STEP_COUNT] * 0.762) / 1000)"/><Parameter expression="floor(([STEP_COUNT] * 0.762) / 100) % 10"/></Template></Font></Text></PartText>
       <PartText name="evil" x="171" y="381" width="124" height="47"><Text align="CENTER"><Font family="saira_stencil" size="28" color="#ff0b0b0c">EVIL</Font></Text></PartText>
       <AnalogClock name="chrono" x="0" y="0" width="466" height="466">
         <SecondHand resource="sec_hand" x="221" y="0" width="24" height="233" pivotX="0.5" pivotY="1.0"/>
       </AnalogClock>
     </Group>
-
-    <!-- ================= COMPLICATIONS (must sit directly under Scene) ================= -->
-    <ComplicationSlot name="uv" slotId="0" x="286" y="331" width="116" height="59" supportedTypes="SHORT_TEXT EMPTY" isCustomizable="FALSE">
-        <Variant mode="AMBIENT" target="alpha" value="0"/>
-        <DefaultProviderPolicy defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY" primaryProvider="com.heytap.wearable.weather/com.heytap.wearable.weather.complication.wearos.UVIndexProviderService" primaryProviderType="SHORT_TEXT"/>
-        <BoundingBox x="0" y="0" width="116" height="59"/>
-        <Complication type="SHORT_TEXT">
-          <PartText x="0" y="0" width="116" height="59"><Text align="CENTER"><Font family="saira_stencil" size="36" color="#ffff2424"><Template>%s<Parameter expression="round([COMPLICATION.TEXT])"/></Template></Font></Text></PartText>
-        </Complication>
-        <Complication type="EMPTY">
-          <PartText x="0" y="0" width="116" height="59"><Text align="CENTER"><Font family="saira_stencil" size="36" color="#ffff2424">--</Font></Text></PartText>
-        </Complication>
-      </ComplicationSlot>
-
 
     <!-- ================= ALWAYS-ON ================= -->
     <Group name="aod" x="0" y="0" width="466" height="466" alpha="0">
