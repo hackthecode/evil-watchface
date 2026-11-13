@@ -42,8 +42,8 @@ function Rect($x, $y, $w, $h, $color) { $null = $shapes.Add(@{ t = "rect"; x = $
 function Bracket([double]$x, [double]$y, [int]$dx, [int]$dy, [int]$len, $color) { Ln $x $y ($x + $dx * $len) $y $color 2; Ln $x $y $x ($y + $dy * $len) $color 2 }
 
 # ---------------------------------------------------------------- layout (cap tops)
-$sDate = 28; $sTop = 38; $sTime = 130; $sA = 42; $sB = 36; $sLbl = 13; $sBrand = 20
-$yDate = 48; $yTopL = 84; $yTopV = 99; $yTime = 147; $yAL = 268; $yAV = 284; $yBL = 332; $yBV = 348; $yBrand = 393
+$sDate = 28; $sTop = 38; $sTime = 130; $sA = 42; $sB = 36; $sLbl = 13; $sBrand = 28
+$yDate = 48; $yTopL = 84; $yTopV = 99; $yTime = 147; $yAL = 268; $yAV = 284; $yBL = 332; $yBV = 348; $yBrand = 394
 $gap = 26
 $RLIM = 204   # content limit; chrono numerals live at r ~216, minute ticks at r 225-231
 $GOAL = "clamp(round([STEP_COUNT] * 100.0 / clamp([STEP_GOAL], 1, 100000)), 0, 999)"
@@ -54,7 +54,11 @@ Txt "date" $C $yDate 300 $sDate "saira_stencil" $GREY "%s %s %s" @("[DAY_OF_WEEK
 # top row: HR | WEEK | MSG
 $xT = @(124, 233, 342)
 Txt "lHr"  $xT[0] $yTopL 90 $sLbl "mono_bold" $LBL "HR" $null "HR"
-Txt "vHr"  $xT[0] $yTopV 110 $sTop "saira_stencil" $RED "%s" @("([HEART_RATE] > 0) ? [HEART_RATE] : 0") "72"
+# [HEART_RATE] arrives as text on the OnePlus Watch 3: comparing it directly always fails, so go through round().
+# The sensor also reports 0 between readings, so show "--" until a real value is there.
+$HR = "round([HEART_RATE])"
+Txt "vHr"  $xT[0] $yTopV 110 $sTop "saira_stencil" $RED "%s" @($HR) "72" "CENTER" "($HR > 0) ? 255 : 0" 0
+Txt "vHr0" $xT[0] $yTopV 110 $sTop "saira_stencil" $RED "--" $null "" "CENTER" "($HR > 0) ? 0 : 255" 255
 Txt "lWk"  $xT[1] $yTopL 90 $sLbl "mono_bold" $LBL "WEEK" $null "WEEK"
 Txt "vWk"  $xT[1] $yTopV 110 $sTop "saira_stencil" $GREY "%s" @("[WEEK_IN_YEAR]") "46"
 Txt "lMsg" $xT[2] $yTopL 90 $sLbl "mono_bold" $LBL "MSG" $null "MSG"
@@ -89,8 +93,8 @@ Txt "lUv"  $xB[2] $yBL 100 $sLbl "mono_bold" $LBL "UV" $null "UV"
 Txt "vUv"  $xB[2] $yBV 116 $sB "saira_stencil" $RED "%s" @("[WEATHER.UV_INDEX]") "2"
 
 # brand placard
-Rect 188 ($yBrand - 6) 90 26 $RED
-Txt "evil" $C $yBrand 90 $sBrand "saira_stencil" $INK "EVIL" $null "EVIL"
+Rect 171 ($yBrand - 8) 124 36 $RED
+Txt "evil" $C $yBrand 124 $sBrand "saira_stencil" $INK "EVIL" $null "EVIL"
 
 # tactical decoration: corner brackets round the time, row rules with red end marks, cell dividers, label ticks
 $tb = @{ l = 58; r = 408; t = $yTime - 12; b = $yTime + $capT + 12 }
@@ -100,7 +104,7 @@ Ln 40 $ruleA 426 $ruleA $DIM 2; Rect 40 ($ruleA - 2) 12 4 $RED; Rect 414 ($ruleA
 Ln 62 $ruleB 404 $ruleB $DIM 1
 foreach ($vx in 166, 300) { Ln $vx ($yAL - 2) $vx ($yAV + 34) $DIM 1 }
 foreach ($vx in 174, 292) { Ln $vx ($yBL - 2) $vx ($yBV + 28) $DIM 1; Ln $vx ($yTopL - 2) $vx ($yTopV + 30) $DIM 1 }
-Ln 150 ($yBrand + 7) 180 ($yBrand + 7) $DIM 2; Ln 286 ($yBrand + 7) 316 ($yBrand + 7) $DIM 2
+Ln 131 ($yBrand + 10) 161 ($yBrand + 10) $DIM 2; Ln 305 ($yBrand + 10) 335 ($yBrand + 10) $DIM 2
 
 # ---------------------------------------------------------------- fit check: worst-case ink box must stay inside the chrono ring
 $worst = @{ date = "WED 30 SEP"; vHr = "188"; vWk = "52"; vMsg = "99"; hh24 = "00"; mm = "00"; vBat = "100%"; vStp = "18888"; vGol = "100%"; vTmp = "-12°C"; vRn = "100%"; vUv = "11" }
@@ -129,7 +133,26 @@ foreach ($sh in $shapes) {
   else { $shapeXml += "        <Rectangle x=`"$($sh.x)`" y=`"$($sh.y)`" width=`"$($sh.w)`" height=`"$($sh.h)`"><Fill color=`"$($sh.color)`"/></Rectangle>`n" }
 }
 $shapeXml += "      </PartDraw>`n"
-$active = $shapeXml; foreach ($t in $texts) { $active += TextXml $t "      " }
+$active = $shapeXml; foreach ($t in $texts) { if ($t.name -ne "vUv") { $active += TextXml $t "      " } }
+# UV: the system weather source ([WEATHER.UV_INDEX]) is always 0 on the OnePlus Watch 3, so the value comes from the
+# OnePlus weather app's own UV complication. On watches without that app the slot shows "--".
+$uv = $texts | Where-Object { $_.name -eq "vUv" }
+$uvFont = "<Font family=`"$($uv.font)`" size=`"$($uv.size)`" color=`"$($uv.color)`">"
+$uvBox = "x=`"0`" y=`"0`" width=`"$($uv.w)`" height=`"$($uv.h)`""
+$slots = @"
+    <ComplicationSlot name="uv" slotId="0" x="$($uv.x)" y="$($uv.y)" width="$($uv.w)" height="$($uv.h)" supportedTypes="SHORT_TEXT EMPTY" isCustomizable="FALSE">
+        <Variant mode="AMBIENT" target="alpha" value="0"/>
+        <DefaultProviderPolicy defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY" primaryProvider="com.heytap.wearable.weather/com.heytap.wearable.weather.complication.wearos.UVIndexProviderService" primaryProviderType="SHORT_TEXT"/>
+        <BoundingBox $uvBox/>
+        <Complication type="SHORT_TEXT">
+          <PartText $uvBox><Text align="CENTER">$uvFont<Template>%s<Parameter expression="round([COMPLICATION.TEXT])"/></Template></Font></Text></PartText>
+        </Complication>
+        <Complication type="EMPTY">
+          <PartText $uvBox><Text align="CENTER">$uvFont--</Font></Text></PartText>
+        </Complication>
+      </ComplicationSlot>
+
+"@
 # chrono seconds hand: outer needle only (r 150..231), pivot = screen centre
 $HW = 24; $HH = 233
 $active += @"
@@ -166,6 +189,9 @@ $xml = @"
     <Group name="active" x="0" y="0" width="466" height="466" alpha="255">
       <Variant mode="AMBIENT" target="alpha" value="0"/>
 $active    </Group>
+
+    <!-- ================= COMPLICATIONS (must sit directly under Scene) ================= -->
+$slots
 
     <!-- ================= ALWAYS-ON ================= -->
     <Group name="aod" x="0" y="0" width="466" height="466" alpha="0">

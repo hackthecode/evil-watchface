@@ -16,7 +16,7 @@
       <PartDraw name="deco" x="0" y="0" width="466" height="466">
         <Rectangle x="228" y="165" width="10" height="10"><Fill color="#ffff2424"/></Rectangle>
         <Rectangle x="228" y="211" width="10" height="10"><Fill color="#ffff2424"/></Rectangle>
-        <Rectangle x="188" y="387" width="90" height="26"><Fill color="#ffff2424"/></Rectangle>
+        <Rectangle x="171" y="386" width="124" height="36"><Fill color="#ffff2424"/></Rectangle>
         <Line startX="58" startY="135" endX="74" endY="135"><Stroke color="#ff7d8287" thickness="2"/></Line>
         <Line startX="58" startY="135" endX="58" endY="151"><Stroke color="#ff7d8287" thickness="2"/></Line>
         <Line startX="408" startY="135" endX="392" endY="135"><Stroke color="#ff7d8287" thickness="2"/></Line>
@@ -31,12 +31,13 @@
         <Line startX="174" startY="82" endX="174" endY="129"><Stroke color="#ff3a3d40" thickness="1"/></Line>
         <Line startX="292" startY="330" endX="292" endY="376"><Stroke color="#ff3a3d40" thickness="1"/></Line>
         <Line startX="292" startY="82" endX="292" endY="129"><Stroke color="#ff3a3d40" thickness="1"/></Line>
-        <Line startX="150" startY="400" endX="180" endY="400"><Stroke color="#ff3a3d40" thickness="2"/></Line>
-        <Line startX="286" startY="400" endX="316" endY="400"><Stroke color="#ff3a3d40" thickness="2"/></Line>
+        <Line startX="131" startY="404" endX="161" endY="404"><Stroke color="#ff3a3d40" thickness="2"/></Line>
+        <Line startX="305" startY="404" endX="335" endY="404"><Stroke color="#ff3a3d40" thickness="2"/></Line>
       </PartDraw>
       <PartText name="date" x="83" y="35" width="300" height="47"><Text align="CENTER"><Font family="saira_stencil" size="28" color="#ffd4d7da"><Upper><Template>%s %s %s<Parameter expression="[DAY_OF_WEEK_S]"/><Parameter expression="[DAY]"/><Parameter expression="[MONTH_S]"/></Template></Upper></Font></Text></PartText>
       <PartText name="lHr" x="79" y="79" width="90" height="20"><Text align="CENTER"><Font family="mono_bold" size="13" color="#ff7d8287">HR</Font></Text></PartText>
-      <PartText name="vHr" x="69" y="81" width="110" height="62"><Text align="CENTER"><Font family="saira_stencil" size="38" color="#ffff2424"><Template>%s<Parameter expression="([HEART_RATE] &gt; 0) ? [HEART_RATE] : 0"/></Template></Font></Text></PartText>
+      <PartText name="vHr" x="69" y="81" width="110" height="62" alpha="0"><Transform target="alpha" value="(round([HEART_RATE]) &gt; 0) ? 255 : 0"/><Text align="CENTER"><Font family="saira_stencil" size="38" color="#ffff2424"><Template>%s<Parameter expression="round([HEART_RATE])"/></Template></Font></Text></PartText>
+      <PartText name="vHr0" x="69" y="81" width="110" height="62" alpha="255"><Transform target="alpha" value="(round([HEART_RATE]) &gt; 0) ? 0 : 255"/><Text align="CENTER"><Font family="saira_stencil" size="38" color="#ffff2424">--</Font></Text></PartText>
       <PartText name="lWk" x="188" y="79" width="90" height="20"><Text align="CENTER"><Font family="mono_bold" size="13" color="#ff7d8287">WEEK</Font></Text></PartText>
       <PartText name="vWk" x="178" y="81" width="110" height="62"><Text align="CENTER"><Font family="saira_stencil" size="38" color="#ffd4d7da"><Template>%s<Parameter expression="[WEEK_IN_YEAR]"/></Template></Font></Text></PartText>
       <PartText name="lMsg" x="297" y="79" width="90" height="20"><Text align="CENTER"><Font family="mono_bold" size="13" color="#ff7d8287">MSG</Font></Text></PartText>
@@ -56,12 +57,25 @@
       <PartText name="lRn" x="183" y="327" width="100" height="20"><Text align="CENTER"><Font family="mono_bold" size="13" color="#ff7d8287">RAIN</Font></Text></PartText>
       <PartText name="vRn" x="175" y="331" width="116" height="59"><Text align="CENTER"><Font family="saira_stencil" size="36" color="#ffd4d7da"><Template>%s%%<Parameter expression="[WEATHER.CHANCE_OF_PRECIPITATION]"/></Template></Font></Text></PartText>
       <PartText name="lUv" x="294" y="327" width="100" height="20"><Text align="CENTER"><Font family="mono_bold" size="13" color="#ff7d8287">UV</Font></Text></PartText>
-      <PartText name="vUv" x="286" y="331" width="116" height="59"><Text align="CENTER"><Font family="saira_stencil" size="36" color="#ffff2424"><Template>%s<Parameter expression="[WEATHER.UV_INDEX]"/></Template></Font></Text></PartText>
-      <PartText name="evil" x="188" y="383" width="90" height="34"><Text align="CENTER"><Font family="saira_stencil" size="20" color="#ff0b0b0c">EVIL</Font></Text></PartText>
+      <PartText name="evil" x="171" y="381" width="124" height="47"><Text align="CENTER"><Font family="saira_stencil" size="28" color="#ff0b0b0c">EVIL</Font></Text></PartText>
       <AnalogClock name="chrono" x="0" y="0" width="466" height="466">
         <SecondHand resource="sec_hand" x="221" y="0" width="24" height="233" pivotX="0.5" pivotY="1.0"/>
       </AnalogClock>
     </Group>
+
+    <!-- ================= COMPLICATIONS (must sit directly under Scene) ================= -->
+    <ComplicationSlot name="uv" slotId="0" x="286" y="331" width="116" height="59" supportedTypes="SHORT_TEXT EMPTY" isCustomizable="FALSE">
+        <Variant mode="AMBIENT" target="alpha" value="0"/>
+        <DefaultProviderPolicy defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY" primaryProvider="com.heytap.wearable.weather/com.heytap.wearable.weather.complication.wearos.UVIndexProviderService" primaryProviderType="SHORT_TEXT"/>
+        <BoundingBox x="0" y="0" width="116" height="59"/>
+        <Complication type="SHORT_TEXT">
+          <PartText x="0" y="0" width="116" height="59"><Text align="CENTER"><Font family="saira_stencil" size="36" color="#ffff2424"><Template>%s<Parameter expression="round([COMPLICATION.TEXT])"/></Template></Font></Text></PartText>
+        </Complication>
+        <Complication type="EMPTY">
+          <PartText x="0" y="0" width="116" height="59"><Text align="CENTER"><Font family="saira_stencil" size="36" color="#ffff2424">--</Font></Text></PartText>
+        </Complication>
+      </ComplicationSlot>
+
 
     <!-- ================= ALWAYS-ON ================= -->
     <Group name="aod" x="0" y="0" width="466" height="466" alpha="0">

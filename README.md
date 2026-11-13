@@ -15,6 +15,8 @@ A military-style data face for round Wear OS watches (built for the OnePlus Watc
 
 A stripped-down always-on (ambient) layout keeps only the time.
 
+Notes from the OnePlus Watch 3: heart rate shows `--` until the sensor has a reading (it reports 0 between measurements), and the UV value comes from the OnePlus weather app's complication, because the system weather source always returns 0 there. On watches without that app the UV field shows `--`.
+
 ## How it is built
 
 Pure [Watch Face Format v2](https://developer.android.com/training/wearables/wff) — the APK contains resources only, no code.
