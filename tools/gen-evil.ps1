@@ -24,7 +24,7 @@ foreach ($f in $fontInfo.Keys) {
 }
 
 # ---------------------------------------------------------------- palette
-$GREY = "#ffd4d7da"; $RED = "#ffff2424"; $LBL = "#ff7d8287"; $DIM = "#ff3a3d40"; $INK = "#ff0b0b0c"
+$GREY = "#ffd4d7da"; $RED = "#ffff2424"; $LBL = "#ff7d8287"; $DIM = "#ff3a3d40"; $INK = "#ff0b0b0c"; $AMB = "#ffffb000"
 
 # ---------------------------------------------------------------- primitives (shared by XML + mock)
 $texts = New-Object System.Collections.ArrayList
@@ -57,12 +57,18 @@ Txt "lHr"  $xT[0] $yTopL 90 $sLbl "mono_bold" $LBL "HR" $null "HR"
 # [HEART_RATE] arrives as text on the OnePlus Watch 3: comparing it directly always fails, so go through round().
 # The sensor also reports 0 between readings, so show "--" until a real value is there.
 $HR = "round([HEART_RATE])"
-Txt "vHr"  $xT[0] $yTopV 110 $sTop "saira_stencil" $RED "%s" @($HR) "72" "CENTER" "($HR > 0) ? 255 : 0" 0
-Txt "vHr0" $xT[0] $yTopV 110 $sTop "saira_stencil" $RED "--" $null "" "CENTER" "($HR > 0) ? 0 : 255" 255
+# colour follows the zone: grey at rest (under 100), amber when elevated (100-139), red when high (140 and up)
+Txt "vHr"  $xT[0] $yTopV 110 $sTop "saira_stencil" $GREY "%s" @($HR) "72" "CENTER" "(($HR > 0) && ($HR < 100)) ? 255 : 0" 0
+Txt "vHrM" $xT[0] $yTopV 110 $sTop "saira_stencil" $AMB "%s" @($HR) "" "CENTER" "(($HR >= 100) && ($HR < 140)) ? 255 : 0" 0
+Txt "vHrH" $xT[0] $yTopV 110 $sTop "saira_stencil" $RED "%s" @($HR) "" "CENTER" "($HR >= 140) ? 255 : 0" 0
+Txt "vHr0" $xT[0] $yTopV 110 $sTop "saira_stencil" $LBL "--" $null "" "CENTER" "($HR > 0) ? 0 : 255" 255
 Txt "lWk"  $xT[1] $yTopL 90 $sLbl "mono_bold" $LBL "WEEK" $null "WEEK"
 Txt "vWk"  $xT[1] $yTopV 110 $sTop "saira_stencil" $GREY "%s" @("[WEEK_IN_YEAR]") "46"
 Txt "lMsg" $xT[2] $yTopL 90 $sLbl "mono_bold" $LBL "MSG" $null "MSG"
-Txt "vMsg" $xT[2] $yTopV 110 $sTop "saira_stencil" $GREY "%s" @("[UNREAD_NOTIFICATION_COUNT]") "3"
+# red only while something is unread
+$MSG = "round([UNREAD_NOTIFICATION_COUNT])"
+Txt "vMsg"  $xT[2] $yTopV 110 $sTop "saira_stencil" $RED "%s" @($MSG) "3" "CENTER" "($MSG > 0) ? 255 : 0" 0
+Txt "vMsg0" $xT[2] $yTopV 110 $sTop "saira_stencil" $GREY "0" $null "" "CENTER" "($MSG > 0) ? 0 : 255" 255
 
 # time: HH light grey, MM bright red, solid (no outline / glow)
 $tw = 210; $hx = $C - $gap / 2; $mx = $C + $gap / 2
@@ -75,7 +81,9 @@ Rect 228 $c1 10 10 $RED; Rect 228 $c2 10 10 $RED
 
 # row A: BAT | STEPS | GOAL
 $xA = @(102, 233, 364)
-Txt "lBat"  $xA[0] $yAL 110 $sLbl "mono_bold" $LBL "BAT" $null "BAT"
+# the label turns into a red CHG while the watch is on the charger
+Txt "lBat"  $xA[0] $yAL 110 $sLbl "mono_bold" $LBL "BAT" $null "BAT" "CENTER" "[BATTERY_IS_CHARGING] ? 0 : 255" 255
+Txt "lChg"  $xA[0] $yAL 110 $sLbl "mono_bold" $RED "CHG" $null "" "CENTER" "[BATTERY_IS_CHARGING] ? 255 : 0" 0
 Txt "vBat"  $xA[0] $yAV 130 $sA "saira_stencil" $GREY "%s%%" @("[BATTERY_PERCENT]") "76%" "CENTER" $lowOff 255
 Txt "vBatL" $xA[0] $yAV 130 $sA "saira_stencil" $RED "%s%%" @("[BATTERY_PERCENT]") "" "CENTER" $lowOn 0
 Txt "lStp"  $xA[1] $yAL 130 $sLbl "mono_bold" $LBL "STEPS" $null "STEPS"
@@ -90,7 +98,8 @@ Txt "vTmp" $xB[0] $yBV 116 $sB "saira_stencil" $GREY "%s°C" @("([WEATHER.TEMPER
 Txt "lRn"  $xB[1] $yBL 100 $sLbl "mono_bold" $LBL "RAIN" $null "RAIN"
 Txt "vRn"  $xB[1] $yBV 116 $sB "saira_stencil" $GREY "%s%%" @("[WEATHER.CHANCE_OF_PRECIPITATION]") "20%"
 # distance is estimated from the step count ($STRIDE metres per step); one decimal built from two integers
-$STRIDE = 0.762; $M = "([STEP_COUNT] * $STRIDE)"
+$STRIDE = 0.78;   # 0.414 x height, for 187-190 cm
+ $M = "([STEP_COUNT] * $STRIDE)"
 Txt "lKm"  $xB[2] $yBL 100 $sLbl "mono_bold" $LBL "KM" $null "KM"
 Txt "vKm"  ($xB[2] - 4) $yBV 116 $sB "saira_stencil" $RED "%s.%s" @("floor($M / 1000)", "floor($M / 100) % 10") "6.4"
 
@@ -109,7 +118,7 @@ foreach ($vx in 174, 292) { Ln $vx ($yBL - 2) $vx ($yBV + 28) $DIM 1; Ln $vx ($y
 Ln 131 ($yBrand + 10) 161 ($yBrand + 10) $DIM 2; Ln 305 ($yBrand + 10) 335 ($yBrand + 10) $DIM 2
 
 # ---------------------------------------------------------------- fit check: worst-case ink box must stay inside the chrono ring
-$worst = @{ date = "WED 30 SEP"; vHr = "188"; vWk = "52"; vMsg = "99"; hh24 = "00"; mm = "00"; vBat = "100%"; vStp = "18888"; vGol = "100%"; vTmp = "-12°C"; vRn = "100%"; vKm = "99.9" }
+$worst = @{ date = "WED 30 SEP"; vHr = "99"; vHrH = "188"; vWk = "52"; vMsg = "99"; hh24 = "00"; mm = "00"; vBat = "100%"; vStp = "18888"; vGol = "100%"; vTmp = "-12°C"; vRn = "100%"; vKm = "99.9" }
 $chkG = [System.Drawing.Graphics]::FromImage((New-Object System.Drawing.Bitmap 4, 4))
 foreach ($t in $texts) {
   $smp = if ($worst[$t.name]) { $worst[$t.name] } else { $t.sample }; if (-not $smp) { continue }

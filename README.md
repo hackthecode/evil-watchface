@@ -15,6 +15,8 @@ A military-style data face for round Wear OS watches (built for the OnePlus Watc
 
 A stripped-down always-on (ambient) layout keeps only the time.
 
+Values change colour with their state: heart rate is grey under 100, amber from 100 and red from 140; the message count is red only while something is unread; the battery label turns into a red CHG on the charger and the value goes red at 20 % or less. Distance uses 0.78 m per step.
+
 Notes from the OnePlus Watch 3: heart rate shows `--` until the sensor has a reading (it reports 0 between measurements). The system weather source always returns 0 for UV there, so that field was replaced by distance.
 
 ## How it is built
