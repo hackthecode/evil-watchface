@@ -4,6 +4,10 @@ A military-style data face for round Wear OS watches (built for the OnePlus Watc
 
 <p align="center"><img src="res/drawable/preview.png" width="360" alt="EVIL watch face"></p>
 
+<p align="center"><img src="docs/animation.png" width="560" alt="EVIL watch face, animated"></p>
+
+The animation is rendered from the face's own layers.
+
 ## What it shows
 
 | Row | Fields |
